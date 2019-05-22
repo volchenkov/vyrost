@@ -45,8 +45,8 @@
     pCreature.maxSpeed = 10;
     pCreature.speedX = pCreature.maxSpeed / 2;
     pCreature.speedY = pCreature.maxSpeed / 2;
-    pCreature.x = canvas.width / 2 - config.DEFAULT_X_SIZE / 2;
-    pCreature.y = canvas.height - config.DEFAULT_Y_SIZE * 2;
+    pCreature.x = canvas.width / 2 - pCreature.sizeX / 2;
+    pCreature.y = canvas.height - pCreature.sizeY * 1.2;
 
     creatures.push(pCreature);
 
@@ -103,10 +103,10 @@
 
         creatures
             .forEach(c => {
-                if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < c.sizeX) {
+                if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < 0) {
                     c.speedX = -c.speedX;
                 }
-                if (c.y + c.speedY > canvas.height - c.sizeY || c.y + c.speedY < c.sizeY) {
+                if (c.y + c.speedY > canvas.height - c.sizeY || c.y + c.speedY < 0) {
                     c.speedY = -c.speedY;
                 }
 
@@ -199,6 +199,9 @@
 
         c.eat = (food) => {
             c.satiety += food.value;
+            
+            c.sizeX = c.sizeX * 1.3;
+            c.sizeY = c.sizeY * 1.3;
         } 
 
         return c;
