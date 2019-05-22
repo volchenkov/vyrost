@@ -33,7 +33,23 @@
         NPC_CREATURES_COUNT: 5,
     };
 
+    const kbrdCtrl = {u: false, d: false, l: false, r: false};
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
     let creatures = [];
+
+    let pCreature = createCreature(false);
+
+    pCreature.maxSpeed = 10;
+    pCreature.speedX = pCreature.maxSpeed / 2;
+    pCreature.speedY = pCreature.maxSpeed / 2;
+    pCreature.x = canvas.width / 2 - config.DEFAULT_X_SIZE / 2;
+    pCreature.y = canvas.height - config.DEFAULT_Y_SIZE * 2;
+
+    creatures.push(pCreature);
+
     let food = [];
 
     function drawCreatures(ctx, creatures) {
@@ -57,8 +73,26 @@
     }
 
     function tick() {
+
+        if (kbrdCtrl.r) {
+            pCreature.speedX = pCreature.maxSpeed / 2;
+        } else if (kbrdCtrl.l) {
+            pCreature.speedX = -pCreature.maxSpeed / 2;
+        } else {
+            pCreature.speedX = 0; 
+        }
+
+        if (kbrdCtrl.u) {
+            pCreature.speedY = -pCreature.maxSpeed / 2;
+        } else if (kbrdCtrl.d) {
+            pCreature.speedY = pCreature.maxSpeed / 2;
+        } else {
+            pCreature.speedY = 0;
+        }
+
+    
+
         creatures
-            .filter(c => c.npc)
             .forEach(c => {
                 if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < c.sizeX) {
                     c.speedX = -c.speedX;
@@ -78,10 +112,36 @@
         requestAnimationFrame(tick);
     }
 
-    let pc = createCreature(false);
-    pc.x = canvas.width / 2 - config.DEFAULT_X_SIZE / 2;
-    pc.y = canvas.height - config.DEFAULT_Y_SIZE * 2;
-    creatures.push(pc);
+
+    function keyDownHandler(e) {
+        if (e.key == "Right" || e.key == "ArrowRight") {
+            kbrdCtrl.r = true;
+        } 
+        else if (e.key == "Left" || e.key == "ArrowLeft") {
+            kbrdCtrl.l = true;
+        }
+        else if (e.key == "Up" || e.key == "ArrowUp") {
+            kbrdCtrl.u = true;
+        }
+        else if (e.key == 'Down' || e.key == 'ArrowDown') {
+            kbrdCtrl.d = true;
+        }
+    }
+
+    function keyUpHandler(e) {
+        if (e.key == "Right" || e.key == "ArrowRight") {
+            kbrdCtrl.r = false;
+        } 
+        else if (e.key == "Left" || e.key == "ArrowLeft") {
+            kbrdCtrl.l = false;
+        }
+        else if (e.key == "Up" || e.key == "ArrowUp") {
+            kbrdCtrl.u = false;
+        }
+        else if (e.key == 'Down' || e.key == 'ArrowDown') {
+            kbrdCtrl.d = false;
+        }
+    }
 
     for (let j = 0; j <= config.NPC_CREATURES_COUNT; j++) {
         let c = createCreature(true)
@@ -109,16 +169,14 @@
     function createCreature(npc) {
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
 
-        const maxSpeedX = rnd(1, 6); 
-        const maxSpeedY = rnd(1, 6); 
+        const maxSpeed = rnd(1, 6); 
 
         return {
             sizeX: config.DEFAULT_X_SIZE,
             sizeY: config.DEFAULT_Y_SIZE,
-            maxSpeedX: maxSpeedX,
-            maxSpeedY: maxSpeedY,
-            speedX: plusOrMinus() * rnd(0, maxSpeedX),
-            speedY: plusOrMinus() * rnd(0, maxSpeedX),
+            maxSpeed: maxSpeed,
+            speedX: plusOrMinus() * rnd(1, maxSpeed),
+            speedY: plusOrMinus() * rnd(1, maxSpeed),
             skin: !npc ? '#FF008F' : rndBlue(),
             x: 0,
             y: 0,
