@@ -40,7 +40,7 @@
         creatures.forEach(c => {
             ctx.beginPath();
             ctx.rect(c.x, c.y, c.sizeX, c.sizeY);
-            ctx.fillStyle = c.npc ? '#0095DD' : '#8E44AD';
+            ctx.fillStyle = c.skin;
             ctx.fill();
             ctx.closePath();
         });
@@ -107,6 +107,8 @@
 
 
     function createCreature(npc) {
+        let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
+
         const maxSpeedX = rnd(1, 6); 
         const maxSpeedY = rnd(1, 6); 
 
@@ -117,6 +119,7 @@
             maxSpeedY: maxSpeedY,
             speedX: plusOrMinus() * rnd(0, maxSpeedX),
             speedY: plusOrMinus() * rnd(0, maxSpeedX),
+            skin: !npc ? '#FF008F' : rndBlue(),
             x: 0,
             y: 0,
             npc: npc,
