@@ -30,7 +30,7 @@
         DEFAULT_FOOD_Y_SIZE: 10,
         DEFAULT_FOOD_X_SIZE: 10,
         INIT_FOOD_COUNT: 10,
-        NPC_CREATURES_COUNT: 5,
+        NPC_CREATURES_COUNT: 10,
     };
 
     const kbrdCtrl = {u: false, d: false, l: false, r: false};
@@ -72,6 +72,17 @@
         });
     }
 
+    function collideFood(creatures, food) {
+        creatures.forEach(c => {
+            food.forEach((f, i) => {
+                if (Math.abs(c.x - f.x) <= c.sizeX && Math.abs(c.y - f.y) <= c.sizeY) {
+                    c.eat(food);
+                    food.splice(i, 1);
+                }
+            })
+        })
+    }
+
     function tick() {
 
         if (kbrdCtrl.r) {
@@ -90,8 +101,6 @@
             pCreature.speedY = 0;
         }
 
-    
-
         creatures
             .forEach(c => {
                 if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < c.sizeX) {
@@ -104,8 +113,11 @@
                 c.x += c.speedX;
                 c.y += c.speedY;
             });
+        
+        collideFood(creatures, food);
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         drawFood(ctx, food);
         drawCreatures(ctx, creatures);
 
@@ -156,6 +168,7 @@
         let f = {
             sizeX: config.DEFAULT_FOOD_X_SIZE,
             sizeY: config.DEFAULT_FOOD_Y_SIZE,
+            value: 10
         }
         f.x = rnd(f.sizeX, canvas.width - f.sizeX)
         f.y = rnd(f.sizeY, canvas.height - f.sizeY)
@@ -171,7 +184,7 @@
 
         const maxSpeed = rnd(1, 6); 
 
-        return {
+        let c = {
             sizeX: config.DEFAULT_X_SIZE,
             sizeY: config.DEFAULT_Y_SIZE,
             maxSpeed: maxSpeed,
@@ -180,8 +193,15 @@
             skin: !npc ? '#FF008F' : rndBlue(),
             x: 0,
             y: 0,
+            satiety: 100,
             npc: npc,
         }
+
+        c.eat = (food) => {
+            c.satiety += food.value;
+        } 
+
+        return c;
     }
 
     function rnd(min, max) {
