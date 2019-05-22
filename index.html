@@ -11,17 +11,17 @@
     	canvas { 
             background: #eee;
             display: block;
-            margin: 0 auto;
-            margin-top: 50px;
         }
     </style>
 </head>
 <body>
 
-<canvas id="canvas" width="560" height="560"></canvas>
+<canvas id="canvas"></canvas>
 
 <script>
     let canvas = document.getElementById("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     let ctx = canvas.getContext("2d");
 
     let config = { 
