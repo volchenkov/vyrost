@@ -25,11 +25,7 @@
     let ctx = canvas.getContext("2d");
 
     let config = { 
-        DEFAULT_X_SIZE: 10,
-        DEFAULT_Y_SIZE: 10,
-        DEFAULT_FOOD_Y_SIZE: 10,
-        DEFAULT_FOOD_X_SIZE: 10,
-        INIT_FOOD_COUNT: 25,
+        INIT_FOOD_COUNT: 50,
         NPC_CREATURES_COUNT: 10,
     };
 
@@ -164,10 +160,11 @@
     }
 
     for (let i = 0; i <= config.INIT_FOOD_COUNT; i++) {
+        let foodValue = rnd(10, 20);
         let f = {
-            sizeX: config.DEFAULT_FOOD_X_SIZE,
-            sizeY: config.DEFAULT_FOOD_Y_SIZE,
-            value: 10
+            sizeX: foodValue,
+            sizeY: foodValue,
+            value: foodValue
         }
         f.x = rnd(f.sizeX, canvas.width - f.sizeX)
         f.y = rnd(f.sizeY, canvas.height - f.sizeY)
@@ -182,10 +179,11 @@
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
 
         const maxSpeed = rnd(1, 10); 
+        const size = rnd(5,20);
 
         let c = {
-            sizeX: config.DEFAULT_X_SIZE,
-            sizeY: config.DEFAULT_Y_SIZE,
+            sizeX: size,
+            sizeY: size,
             maxSpeed: maxSpeed,
             speedX: plusOrMinus() * maxSpeed,
             speedY: plusOrMinus() * maxSpeed,
@@ -198,9 +196,6 @@
 
         c.eat = (food) => {
             c.satiety += food.value;
-            
-            c.sizeX = c.sizeX * 1.3;
-            c.sizeY = c.sizeY * 1.3;
         } 
 
         return c;
