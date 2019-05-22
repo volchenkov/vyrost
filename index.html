@@ -42,9 +42,8 @@
 
     let pCreature = createCreature(false);
 
-    pCreature.maxSpeed = 10;
-    pCreature.speedX = pCreature.maxSpeed / 2;
-    pCreature.speedY = pCreature.maxSpeed / 2;
+    pCreature.speedX = pCreature.maxSpeed;
+    pCreature.speedY = pCreature.maxSpeed;
     pCreature.x = canvas.width / 2 - pCreature.sizeX / 2;
     pCreature.y = canvas.height - pCreature.sizeY * 1.2;
 
@@ -86,17 +85,17 @@
     function tick() {
 
         if (kbrdCtrl.r) {
-            pCreature.speedX = pCreature.maxSpeed / 2;
+            pCreature.speedX = pCreature.maxSpeed;
         } else if (kbrdCtrl.l) {
-            pCreature.speedX = -pCreature.maxSpeed / 2;
+            pCreature.speedX = -pCreature.maxSpeed;
         } else {
             pCreature.speedX = 0; 
         }
 
         if (kbrdCtrl.u) {
-            pCreature.speedY = -pCreature.maxSpeed / 2;
+            pCreature.speedY = -pCreature.maxSpeed;
         } else if (kbrdCtrl.d) {
-            pCreature.speedY = pCreature.maxSpeed / 2;
+            pCreature.speedY = pCreature.maxSpeed;
         } else {
             pCreature.speedY = 0;
         }
@@ -182,14 +181,14 @@
     function createCreature(npc) {
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
 
-        const maxSpeed = rnd(1, 6); 
+        const maxSpeed = rnd(1, 10); 
 
         let c = {
             sizeX: config.DEFAULT_X_SIZE,
             sizeY: config.DEFAULT_Y_SIZE,
             maxSpeed: maxSpeed,
-            speedX: plusOrMinus() * rnd(1, maxSpeed),
-            speedY: plusOrMinus() * rnd(1, maxSpeed),
+            speedX: plusOrMinus() * maxSpeed,
+            speedY: plusOrMinus() * maxSpeed,
             skin: !npc ? '#FF008F' : rndBlue(),
             x: 0,
             y: 0,
