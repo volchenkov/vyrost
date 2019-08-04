@@ -56,7 +56,7 @@
                 ctx.beginPath();
                 ctx.arc(c.x + c.sizeX/2, c.y + c.sizeY/2, c.smellingRadius, 0, 2*Math.PI, false);
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = '#ccc';
+                ctx.strokeStyle = '#ddd';
                 ctx.stroke();
             }
         });
@@ -66,13 +66,11 @@
         food.forEach(f => {
             let distance = Math.sqrt(Math.pow(f.x - pCreature.x, 2) + Math.pow(f.y - pCreature.y, 2));
             const isSmelled = pCreature.smellingRadius > distance; 
-            if (isSmelled) {
-                ctx.beginPath();
-                ctx.rect(f.x, f.y, f.sizeX, f.sizeY);
-                ctx.fillStyle = isSmelled ? '#43DF39' : '#aaa';
-                ctx.fill();
-                ctx.closePath();
-            }
+            ctx.beginPath();
+            ctx.rect(f.x, f.y, f.sizeX, f.sizeY);
+            ctx.fillStyle = isSmelled ? '#43DF39' : '#cceecc';
+            ctx.fill();
+            ctx.closePath();
         });
 
         ctx.font = "15px Arial";
