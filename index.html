@@ -29,18 +29,21 @@
         NPC_CREATURES_COUNT: 10,
     };
 
-    let creatures = [];
+    let food = [];
+    initFood();
 
     let pCreature = createCreature(false);
-
+    pCreature.id = 0;
     pCreature.speedX = pCreature.maxSpeed;
     pCreature.speedY = pCreature.maxSpeed;
     pCreature.x = canvas.width / 2 - pCreature.sizeX / 2;
     pCreature.y = canvas.height - pCreature.sizeY * 1.2;
 
+    let creatures = [];
     creatures.push(pCreature);
+    initNPCCreatures();
 
-    let food = [];
+    tick();
 
     function drawCreatures(ctx, creatures) {
         creatures.forEach(c => {
@@ -63,12 +66,11 @@
     }
 
     function drawFood(ctx, food) {
+        let coloredFood = pCreature.smelledFood.map(f => f.id) 
         food.forEach(f => {
-            let distance = Math.sqrt(Math.pow(f.x - pCreature.x, 2) + Math.pow(f.y - pCreature.y, 2));
-            const isSmelled = pCreature.smellingRadius > distance; 
             ctx.beginPath();
             ctx.rect(f.x, f.y, f.sizeX, f.sizeY);
-            ctx.fillStyle = isSmelled ? '#43DF39' : '#cceecc';
+            ctx.fillStyle = coloredFood.includes(f.id) ? '#43DF39' : '#cceecc'; 
             ctx.fill();
             ctx.closePath();
         });
@@ -102,7 +104,40 @@
         });
     }
 
+    function sniffFood(creatures, food) {
+        creatures.forEach(c => c.sniff(food))
+    }
+
+    function initFood() {
+        for (let i = 0; i <= config.INIT_FOOD_COUNT; i++) {
+            let foodValue = rnd(10, 20);
+            let f = {
+                sizeX: foodValue,
+                sizeY: foodValue,
+                value: foodValue,
+                id: i
+            }
+            f.x = rnd(f.sizeX, canvas.width - f.sizeX)
+            f.y = rnd(f.sizeY, canvas.height - f.sizeY)
+            
+            food.push(f)
+        }
+    }
+
+    function initNPCCreatures() {
+        for (let j = 1; j <= config.NPC_CREATURES_COUNT + 1; j++) {
+            let c = createCreature(true)
+
+            c.x = rnd(c.sizeX, canvas.width - c.sizeX);
+            c.y = rnd(c.sizeY, canvas.height - c.sizeY);
+            c.id = j;
+
+            creatures.push(c);
+        }
+    }
+
     function tick() {
+        sniffFood(creatures, food);
         collideFood(creatures, food);
         moveCreatures(creatures);
         
@@ -113,31 +148,6 @@
 
         requestAnimationFrame(tick);
     }
-
-    for (let j = 0; j <= config.NPC_CREATURES_COUNT; j++) {
-        let c = createCreature(true)
-
-        c.x = rnd(c.sizeX, canvas.width - c.sizeX);
-        c.y = rnd(c.sizeY, canvas.height - c.sizeY);
-
-        creatures.push(c);
-    }
-
-    for (let i = 0; i <= config.INIT_FOOD_COUNT; i++) {
-        let foodValue = rnd(10, 20);
-        let f = {
-            sizeX: foodValue,
-            sizeY: foodValue,
-            value: foodValue
-        }
-        f.x = rnd(f.sizeX, canvas.width - f.sizeX)
-        f.y = rnd(f.sizeY, canvas.height - f.sizeY)
-        
-        food.push(f)
-    }
-    
-    tick();
-
 
     function createCreature(npc) {
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
@@ -156,12 +166,18 @@
             y: 0,
             satiety: 100,
             npc: npc,
-            smellingRadius: Math.max(canvas.width, canvas.height) / 15
+            smellingRadius: Math.max(canvas.width, canvas.height) / 15,
+            smelledFood: [],
+            id: null
         }
 
         c.eat = (food) => {
             c.satiety += food.value;
         } 
+
+        c.sniff = (food) => {
+            c.smelledFood = food.filter(f => c.smellingRadius > Math.sqrt(Math.pow(f.x - c.x, 2) + Math.pow(f.y - c.y, 2)))
+        }
 
         return c;
     }
