@@ -29,11 +29,6 @@
         NPC_CREATURES_COUNT: 10,
     };
 
-    const kbrdCtrl = {u: false, d: false, l: false, r: false};
-
-    document.addEventListener("keydown", keyDownHandler, false);
-    document.addEventListener("keyup", keyUpHandler, false);
-
     let creatures = [];
 
     let pCreature = createCreature(false);
@@ -96,22 +91,6 @@
     }
 
     function tick() {
-        if (kbrdCtrl.r) {
-            pCreature.speedX = pCreature.maxSpeed;
-        } else if (kbrdCtrl.l) {
-            pCreature.speedX = -pCreature.maxSpeed;
-        } else {
-            pCreature.speedX = 0; 
-        }
-
-        if (kbrdCtrl.u) {
-            pCreature.speedY = -pCreature.maxSpeed;
-        } else if (kbrdCtrl.d) {
-            pCreature.speedY = pCreature.maxSpeed;
-        } else {
-            pCreature.speedY = 0;
-        }
-
         collideFood(creatures, food);
 
         creatures
@@ -133,36 +112,6 @@
         drawCreatures(ctx, creatures);
 
         requestAnimationFrame(tick);
-    }
-
-    function keyDownHandler(e) {
-        if (e.key == "Right" || e.key == "ArrowRight") {
-            kbrdCtrl.r = true;
-        } 
-        else if (e.key == "Left" || e.key == "ArrowLeft") {
-            kbrdCtrl.l = true;
-        }
-        else if (e.key == "Up" || e.key == "ArrowUp") {
-            kbrdCtrl.u = true;
-        }
-        else if (e.key == 'Down' || e.key == 'ArrowDown') {
-            kbrdCtrl.d = true;
-        }
-    }
-
-    function keyUpHandler(e) {
-        if (e.key == "Right" || e.key == "ArrowRight") {
-            kbrdCtrl.r = false;
-        } 
-        else if (e.key == "Left" || e.key == "ArrowLeft") {
-            kbrdCtrl.l = false;
-        }
-        else if (e.key == "Up" || e.key == "ArrowUp") {
-            kbrdCtrl.u = false;
-        }
-        else if (e.key == 'Down' || e.key == 'ArrowDown') {
-            kbrdCtrl.d = false;
-        }
     }
 
     for (let j = 0; j <= config.NPC_CREATURES_COUNT; j++) {
