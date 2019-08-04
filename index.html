@@ -49,22 +49,39 @@
 
     function drawCreatures(ctx, creatures) {
         creatures.forEach(c => {
+            // draw creature area 
             ctx.beginPath();
             ctx.rect(c.x, c.y, c.sizeX, c.sizeY);
             ctx.fillStyle = c.skin;
             ctx.fill();
             ctx.closePath();
+
+            // draw creature smelling area
+            if (!c.npc) {
+                ctx.beginPath();
+                ctx.arc(c.x + c.sizeX/2, c.y + c.sizeY/2, c.smellingRadius, 0, 2*Math.PI, false);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#ccc';
+                ctx.stroke();
+            }
         });
     }
 
     function drawFood(ctx, food) {
         food.forEach(f => {
-            ctx.beginPath();
-            ctx.rect(f.x, f.y, f.sizeX, f.sizeY);
-            ctx.fillStyle = "#43DF39";
-            ctx.fill();
-            ctx.closePath();
+            let distance = Math.sqrt(Math.pow(f.x - pCreature.x, 2) + Math.pow(f.y - pCreature.y, 2));
+            const isSmelled = pCreature.smellingRadius > distance; 
+            if (isSmelled) {
+                ctx.beginPath();
+                ctx.rect(f.x, f.y, f.sizeX, f.sizeY);
+                ctx.fillStyle = isSmelled ? '#43DF39' : '#aaa';
+                ctx.fill();
+                ctx.closePath();
+            }
         });
+
+        ctx.font = "15px Arial";
+        ctx.fillText(food.length, 10, 20);
     }
 
     function collideFood(creatures, food) {
@@ -79,7 +96,6 @@
     }
 
     function tick() {
-
         if (kbrdCtrl.r) {
             pCreature.speedX = pCreature.maxSpeed;
         } else if (kbrdCtrl.l) {
@@ -118,7 +134,6 @@
 
         requestAnimationFrame(tick);
     }
-
 
     function keyDownHandler(e) {
         if (e.key == "Right" || e.key == "ArrowRight") {
@@ -192,6 +207,7 @@
             y: 0,
             satiety: 100,
             npc: npc,
+            smellingRadius: Math.max(canvas.width, canvas.height) / 15
         }
 
         c.eat = (food) => {
