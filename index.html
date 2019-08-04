@@ -34,8 +34,8 @@
 
     let pCreature = createCreature(false);
     pCreature.id = 0;
-    pCreature.speedX = pCreature.maxSpeed;
-    pCreature.speedY = pCreature.maxSpeed;
+    pCreature.speedX = pCreature.maxSpeed / 2;
+    pCreature.speedY = pCreature.maxSpeed / 2;
     pCreature.x = canvas.width / 2 - pCreature.sizeX / 2;
     pCreature.y = canvas.height - pCreature.sizeY * 1.2;
 
@@ -152,15 +152,15 @@
     function createCreature(npc) {
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
 
-        const maxSpeed = rnd(2, 6); 
+        const maxSpeed = rnd(4, 12); 
         const size = rnd(5,20);
 
         let c = {
             sizeX: size,
             sizeY: size,
             maxSpeed: maxSpeed,
-            speedX: plusOrMinus() * maxSpeed,
-            speedY: plusOrMinus() * maxSpeed,
+            speedX: plusOrMinus() * (maxSpeed / 2),
+            speedY: plusOrMinus() * (maxSpeed / 2),
             skin: !npc ? '#FF008F' : rndBlue(),
             x: 0,
             y: 0,
