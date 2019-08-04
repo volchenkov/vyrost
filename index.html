@@ -90,21 +90,23 @@
         })
     }
 
+    function moveCreatures(creatures) {
+        creatures.forEach(c => {
+            if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < 0) {
+                c.speedX = -c.speedX;
+            }
+            if (c.y + c.speedY > canvas.height - c.sizeY || c.y + c.speedY < 0) {
+                c.speedY = -c.speedY;
+            }
+
+            c.x += c.speedX;
+            c.y += c.speedY;
+        });
+    }
+
     function tick() {
         collideFood(creatures, food);
-
-        creatures
-            .forEach(c => {
-                if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < 0) {
-                    c.speedX = -c.speedX;
-                }
-                if (c.y + c.speedY > canvas.height - c.sizeY || c.y + c.speedY < 0) {
-                    c.speedY = -c.speedY;
-                }
-
-                c.x += c.speedX;
-                c.y += c.speedY;
-            });
+        moveCreatures(creatures);
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
