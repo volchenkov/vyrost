@@ -25,7 +25,7 @@
     let ctx = canvas.getContext("2d");
 
     let config = { 
-        INIT_FOOD_COUNT: 50,
+        INIT_FOOD_COUNT: 100,
         NPC_CREATURES_COUNT: 10,
     };
 
@@ -49,7 +49,7 @@
         creatures.forEach(c => {
             // draw creature area 
             ctx.beginPath();
-            ctx.rect(c.x, c.y, c.sizeX, c.sizeY);
+            ctx.rect(c.x - c.sizeX/2, c.y - c.sizeY/2, c.sizeX, c.sizeY);
             ctx.fillStyle = c.skin;
             ctx.fill();
             ctx.closePath();
@@ -57,10 +57,27 @@
             // draw creature smelling area
             if (!c.npc) {
                 ctx.beginPath();
-                ctx.arc(c.x + c.sizeX/2, c.y + c.sizeY/2, c.smellingRadius, 0, 2*Math.PI, false);
+                ctx.arc(c.x, c.y, c.smellingRadius, 0, 2*Math.PI, false);
                 ctx.lineWidth = 1;
                 ctx.strokeStyle = '#ddd';
                 ctx.stroke();
+            }
+
+            // debug drawings 
+            if (!c.npc) {
+                // ctx.fillText(`${c.speedX} ${c.speedY}`, c.x + 10, c.y);
+
+                let target = c.getTarget();
+                if (target) {
+                    // ctx.fillText(`Target: x = ${Math.round(target.x, 2)}, y = ${Math.round(target.y, 2)}, d = ${distance(target, c)}, dir = ${c.x - target.x > 0 ? 'l' : 'r'}`, c.x + 10, c.y + 15);
+
+                    // path to nearest food
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#aaa';
+                    ctx.moveTo(c.x, c.y);
+                    ctx.lineTo(target.x, target.y);
+                    ctx.stroke()
+                }
             }
         });
     }
@@ -69,7 +86,7 @@
         let coloredFood = pCreature.smelledFood.map(f => f.id) 
         food.forEach(f => {
             ctx.beginPath();
-            ctx.rect(f.x, f.y, f.sizeX, f.sizeY);
+            ctx.rect(f.x - f.sizeX/2, f.y - f.sizeY/2, f.sizeX, f.sizeY);
             ctx.fillStyle = coloredFood.includes(f.id) ? '#43DF39' : '#cceecc'; 
             ctx.fill();
             ctx.closePath();
@@ -99,8 +116,7 @@
                 c.speedY = -c.speedY;
             }
 
-            c.x += c.speedX;
-            c.y += c.speedY;
+            c.move(c.getTarget());
         });
     }
 
@@ -152,8 +168,8 @@
     function createCreature(npc) {
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
 
-        const maxSpeed = rnd(4, 12); 
-        const size = rnd(5,20);
+        const maxSpeed = rnd(2, 6); 
+        const size = rnd(5, 20);
 
         let c = {
             sizeX: size,
@@ -176,7 +192,40 @@
         } 
 
         c.sniff = (food) => {
-            c.smelledFood = food.filter(f => c.smellingRadius > Math.sqrt(Math.pow(f.x - c.x, 2) + Math.pow(f.y - c.y, 2)))
+            c.smelledFood = food.filter(f => c.smellingRadius > distance(f, c))
+        }
+
+        c.getTarget = () => {
+            c.smelledFood.sort((f1, f2) => {
+                let d1 = distance(c, f1),
+                    d2 = distance(c, f2);
+
+                return d1 < d2 ? -1 : (d1 == d2 ? 0 : 1);
+            })
+
+            return c.smelledFood[0] || null
+        }
+
+        c.move = (target = null) => {
+            let t = target;
+            if (target !== null) {
+                let sx = Math.abs(c.speedX);
+                if (c.x - t.x > 0) {
+                    c.x -= sx; // food left
+                } else {
+                    c.x += sx; // food right
+                }
+
+                let sy = Math.abs(c.speedY);
+                if (c.y - t.y > 0) {
+                    c.y -= sy;
+                } else {
+                    c.y += sy;
+                }
+            } else {
+                c.x += c.speedX;
+                c.y += c.speedY;
+            }
         }
 
         return c;
@@ -188,6 +237,10 @@
 
     function plusOrMinus() {
         return Math.random() < 0.5 ? -1 : 1;
+    }
+
+    function distance(p1, p2) {
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2))
     }
 </script>
 
