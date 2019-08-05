@@ -152,6 +152,10 @@
         }
     }
 
+    function endGame() {
+        alert('food is over');
+    }
+
     function tick() {
         sniffFood(creatures, food);
         collideFood(creatures, food);
@@ -162,7 +166,12 @@
         drawFood(ctx, food);
         drawCreatures(ctx, creatures);
 
-        requestAnimationFrame(tick);
+        if (food.length === 0) {
+            endGame();
+            location.reload();
+        } else {
+            requestAnimationFrame(tick);
+        }
     }
 
     function createCreature(npc) {
