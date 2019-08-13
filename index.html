@@ -167,7 +167,6 @@
         drawCreatures(ctx, creatures);
 
         if (food.length === 0) {
-            endGame();
             location.reload();
         } else {
             requestAnimationFrame(tick);
