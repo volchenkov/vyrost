@@ -14,241 +14,28 @@
         }
     </style>
 </head>
+<script src="game.js"></script>
 <body>
 
 <canvas id="canvas"></canvas>
 
 <script>
-    var debug = true;
-    var level = 0;
+    let debug = true;
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'q' && e.ctrlKey) {
+            debug = !debug;
+        }
+    })
 
     let canvas = document.getElementById("canvas");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    let ctx = canvas.getContext("2d");
 
-    let config = { 
-        INIT_FOOD_COUNT: 100,
-        NPC_CREATURES_COUNT: 10,
-    };
-
-    let food = [];
-    initFood();
-
-    let pCreature = createCreature(false);
-    pCreature.id = 0;
-    pCreature.speedX = pCreature.maxSpeed / 2;
-    pCreature.speedY = pCreature.maxSpeed / 2;
-    pCreature.x = canvas.width / 2 - pCreature.sizeX / 2;
-    pCreature.y = canvas.height - pCreature.sizeY * 1.2;
-
-    let creatures = [];
-    creatures.push(pCreature);
-    initNPCCreatures();
-
-    tick();
-
-    function drawCreatures(ctx, creatures) {
-        creatures.forEach(c => {
-            // draw creature area 
-            ctx.beginPath();
-            ctx.rect(c.x - c.sizeX/2, c.y - c.sizeY/2, c.sizeX, c.sizeY);
-            ctx.fillStyle = c.skin;
-            ctx.fill();
-            ctx.closePath();
-
-            // draw creature smelling area
-            if (debug) {
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, c.smellingRadius, 0, 2*Math.PI, false);
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = '#ddd';
-                ctx.stroke();
-            }
-
-            // debug drawings 
-            if (debug) {
-                // ctx.fillText(`${c.speedX} ${c.speedY}`, c.x + 10, c.y);
-
-                let target = c.getTarget();
-                if (target) {
-                    // ctx.fillText(`Target: x = ${Math.round(target.x, 2)}, y = ${Math.round(target.y, 2)}, d = ${distance(target, c)}, dir = ${c.x - target.x > 0 ? 'l' : 'r'}`, c.x + 10, c.y + 15);
-
-                    // path to nearest food
-                    ctx.beginPath();
-                    ctx.strokeStyle = '#aaa';
-                    ctx.moveTo(c.x, c.y);
-                    ctx.lineTo(target.x, target.y);
-                    ctx.stroke()
-                }
-            }
-        });
-    }
-
-    function drawFood(ctx, food) {
-        let coloredFood = pCreature.smelledFood.map(f => f.id) 
-        food.forEach(f => {
-            ctx.beginPath();
-            ctx.rect(f.x - f.sizeX/2, f.y - f.sizeY/2, f.sizeX, f.sizeY);
-            ctx.fillStyle = coloredFood.includes(f.id) ? '#43DF39' : '#cceecc'; 
-            ctx.fill();
-            ctx.closePath();
-        });
-
-        ctx.font = "15px Arial";
-        ctx.fillText(food.length, 10, 20);
-    }
-
-    function collideFood(creatures, food) {
-        creatures.forEach(c => {
-            food.forEach((f, i) => {
-                if (Math.abs(c.x - f.x) <= c.sizeX && Math.abs(c.y - f.y) <= c.sizeY) {
-                    c.eat(food);
-                    food.splice(i, 1);
-                }
-            })
-        })
-    }
-
-    function moveCreatures(creatures) {
-        creatures.forEach(c => {
-            if (c.x + c.speedX > canvas.width - c.sizeX || c.x + c.speedX < 0) {
-                c.speedX = -c.speedX;
-            }
-            if (c.y + c.speedY > canvas.height - c.sizeY || c.y + c.speedY < 0) {
-                c.speedY = -c.speedY;
-            }
-
-            c.move(c.getTarget());
-        });
-    }
-
-    function sniffFood(creatures, food) {
-        creatures.forEach(c => c.sniff(food))
-    }
-
-    function initFood() {
-        for (let i = 0; i <= config.INIT_FOOD_COUNT; i++) {
-            let foodValue = rnd(10, 20);
-            let f = {
-                sizeX: foodValue,
-                sizeY: foodValue,
-                value: foodValue,
-                id: i
-            }
-            f.x = rnd(f.sizeX, canvas.width - f.sizeX)
-            f.y = rnd(f.sizeY, canvas.height - f.sizeY)
-            
-            food.push(f)
-        }
-    }
-
-    function initNPCCreatures() {
-        for (let j = 1; j <= config.NPC_CREATURES_COUNT + 1; j++) {
-            let c = createCreature(true)
-
-            c.x = rnd(c.sizeX, canvas.width - c.sizeX);
-            c.y = rnd(c.sizeY, canvas.height - c.sizeY);
-            c.id = j;
-
-            creatures.push(c);
-        }
-    }
-
-    function tick() {
-        sniffFood(creatures, food);
-        collideFood(creatures, food);
-        moveCreatures(creatures);
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        drawFood(ctx, food);
-        drawCreatures(ctx, creatures);
-
-        if (food.length === 0) {
-            location.reload();
-        } else {
-            requestAnimationFrame(tick);
-        }
-    }
-
-    function createCreature(npc) {
-        let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
-
-        const maxSpeed = rnd(2, 6); 
-        const size = rnd(5, 20);
-
-        let c = {
-            sizeX: size,
-            sizeY: size,
-            maxSpeed: maxSpeed,
-            speedX: plusOrMinus() * (maxSpeed / 2),
-            speedY: plusOrMinus() * (maxSpeed / 2),
-            skin: !npc ? '#FF008F' : rndBlue(),
-            x: 0,
-            y: 0,
-            satiety: 100,
-            npc: npc,
-            smellingRadius: Math.max(canvas.width, canvas.height) / 15,
-            smelledFood: [],
-            id: null
-        }
-
-        c.eat = (food) => {
-            c.satiety += food.value;
-        } 
-
-        c.sniff = (food) => {
-            c.smelledFood = food.filter(f => c.smellingRadius > distance(f, c))
-        }
-
-        c.getTarget = () => {
-            c.smelledFood.sort((f1, f2) => {
-                let d1 = distance(c, f1),
-                    d2 = distance(c, f2);
-
-                return d1 < d2 ? -1 : (d1 == d2 ? 0 : 1);
-            })
-
-            return c.smelledFood[0] || null
-        }
-
-        c.move = (target = null) => {
-            let t = target;
-            if (target !== null) {
-                let sx = Math.abs(c.speedX);
-                if (c.x - t.x > 0) {
-                    c.x -= sx; // food left
-                } else {
-                    c.x += sx; // food right
-                }
-
-                let sy = Math.abs(c.speedY);
-                if (c.y - t.y > 0) {
-                    c.y -= sy;
-                } else {
-                    c.y += sy;
-                }
-            } else {
-                c.x += c.speedX;
-                c.y += c.speedY;
-            }
-        }
-
-        return c;
-    }
-
-    function rnd(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    function plusOrMinus() {
-        return Math.random() < 0.5 ? -1 : 1;
-    }
-
-    function distance(p1, p2) {
-        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2))
-    }
+    let game = new Game(canvas);
+    game.start({
+        foodAmount: 100,
+        npcCreaturesAmount: 10
+    });
 </script>
 
 </body>
