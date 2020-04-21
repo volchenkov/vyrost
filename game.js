@@ -3,8 +3,8 @@ function rnd(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-function rndFrom(array) {
-    return array[Math.floor(Math.random() * array.length)]
+function rndFrom(l) {
+    return l[Math.floor(Math.random() * l.length)]
 }
 
 function rndStr() {
@@ -52,6 +52,18 @@ class Vector2
         return this 
     }
 
+    multiply(v) {
+        if (v instanceof Vector2) {
+            this.x *= v.x
+            this.y *= v.y
+        } else {
+            this.x *= v
+            this.y *= v
+        }
+
+        return this
+    }
+
     distance(v) {
         return Math.hypot(this.x - v.x, this.y - v.y)
     }
@@ -67,6 +79,20 @@ class Vector2
         this.y -= v.y
 
         return this
+    }
+
+    normalize(scale=1) {
+        let len = this.len;
+
+        return len > 0 ? this.multiply(scale / len) : this.Set(scale, y=0);
+    }
+
+    diff(v) {
+        return this.clone().sub(v)
+    }
+
+    product(v) {
+        return this.clone().multiply(v)
     }
 
 	// Subtract(v)           { (this.x -= v.x, this.y -= v.y) ; return this;  }
@@ -117,8 +143,7 @@ class Creature {
         this.pos = new Vector2()
         this.weight = rnd(5, 20) 
         this.maxSpeed = maxSpeed
-        this.speedX = plusOrMinus() * maxSpeed 
-        this.speedY = plusOrMinus() * maxSpeed
+        this.direction = new Vector2(rndFrom([-1, 1]) * Math.random(), rndFrom([-1, 1]) * Math.random())
         this.skin = !npc ? '#FF008F' : rndBlue()
         this.smellingR = rnd(50, 100),
         this.satiety = 100
@@ -134,8 +159,8 @@ class Creature {
         this.satiety += food.value;
     }
 
-    get speed() {
-        return new Vector2(this.speedX, this.speedY)
+    speed(a=1) {
+        return this.direction.product(this.maxSpeed * a)
     }
 
     // calc near smelling food
@@ -152,16 +177,17 @@ class Creature {
         if (nearestFood) {
             this.moveTo(nearestFood.pos)
         } else {
-            let angle = rnd(0, 360)
-            this.pos.add(new Vector2(Math.cos(angle) * this.maxSpeed, Math.sin(angle) * this.maxSpeed))
+            this.search()
         }
     }
 
     moveTo(v) {
-        let angle = this.pos.clone().sub(v).angle * 180 / Math.PI,
-            speed = new Vector2(Math.cos(angle) * this.maxSpeed, Math.sin(angle) * this.maxSpeed)
+        let direction = v.diff(this.pos).normalize()
+        this.pos.add(direction.multiply(this.maxSpeed))
+    }
 
-        this.pos.add(speed)
+    search() {
+        this.pos.add(this.speed())
     }
 }
 
@@ -279,7 +305,7 @@ class Game {
 
                 let target = c.sniff(this.lvl);
                 if (target) {
-                    let sub = c.pos.clone().sub(target.pos)
+                    let sub = target.pos.clone().sub(c.pos)
                     // ${c.speed.x} ${c.speed.y}
                     ctx.fillText(sub.len, c.pos.x + 10, c.pos.y);
                     ctx.fillText(sub.x, c.pos.x + 10, c.pos.y + 15);
