@@ -1,4 +1,4 @@
-// lib staff
+/** --- lib staff --- */
 function rnd(min, max) {
     return Math.random() * (max - min) + min;
 }
@@ -10,15 +10,8 @@ function rndFrom(l) {
 function rndStr() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
+/** ---------------- */
 
-function plusOrMinus() {
-    return Math.random() < 0.5 ? -1 : 1;
-}
-
-function distance(p1, p2) {
-    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2))
-}
-//
 
 class Vector2 
 {
@@ -203,7 +196,7 @@ class Game {
             this.canvas.width / 2,
             this.canvas.height / 2
         )
-        this.player = player;
+        this.player = player
     }
 
     start(vars) {
@@ -235,13 +228,13 @@ class Game {
         // move creatures
         this.lvl.creatures.forEach(c => {
             // prevent out of borders movement
-            let nextX = c.pos.x + c.speed.x 
+            let nextX = c.pos.x + c.speed().x 
             if (nextX > this.canvas.width - c.size.x / 2 || nextX < c.size.x / 2) {
-                c.speedX = -c.speedX;
+                c.direction.multiply(new Vector2(-1, 1));
             }
-            let nextY = c.pos.y + c.speed.y
+            let nextY = c.pos.y + c.speed().y
             if (nextY > this.canvas.height - c.size.y / 2 || nextY < c.size.y / 2) {
-                c.speedY = -c.speedY;
+                c.direction.multiply(new Vector2(1, -1));
             }
 
             c.act(this.lvl)
@@ -250,7 +243,7 @@ class Game {
         // collide foods
         this.lvl.creatures.forEach(c => {
             this.lvl.foods.forEach((f, i) => {
-                if (Math.abs(c.pos.x - f.pos.x) <= c.size.x && Math.abs(c.pos.y - f.pos.y) <= c.size.y) {
+                if (f.pos.distance(c.pos) <= Math.max(c.size.x, c.size.y)) {
                     c.eat(f);
                     this.lvl.foods.splice(i, 1);
                 }
@@ -305,11 +298,9 @@ class Game {
 
                 let target = c.sniff(this.lvl);
                 if (target) {
-                    let sub = target.pos.clone().sub(c.pos)
-                    // ${c.speed.x} ${c.speed.y}
-                    ctx.fillText(sub.len, c.pos.x + 10, c.pos.y);
-                    ctx.fillText(sub.x, c.pos.x + 10, c.pos.y + 15);
-                    ctx.fillText(sub.y, c.pos.x + 10, c.pos.y + 30);
+                    let sub = target.pos.distance(c.pos)
+                    ctx.fillText(sub, c.pos.x + 10, c.pos.y);
+                    ctx.fillText(target.size.x, c.pos.x + 10, c.pos.y + 15);
 
                     // path to nearest food
                     ctx.beginPath();
