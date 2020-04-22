@@ -166,6 +166,7 @@ class Creature {
     }
 
     act(lvl) {
+        this.feelHunger()
         let nearestFood = this.sniff(lvl)
         if (nearestFood) {
             this.moveTo(nearestFood.pos)
@@ -177,6 +178,10 @@ class Creature {
     moveTo(v) {
         let direction = v.diff(this.pos).normalize()
         this.pos.add(direction.multiply(this.maxSpeed))
+    }
+
+    feelHunger(hunger=0.3) {
+        this.satiety -= hunger
     }
 
     search() {
@@ -211,6 +216,7 @@ class Game {
             this.canvas.width / 2,
             this.canvas.height / 2
         )
+        this.player.satiety = 100
         lvl.creatures.push(this.player)
 
         // generate creatures
@@ -228,7 +234,6 @@ class Game {
     }
 
     tick() {
-        // move creatures
         this.lvl.creatures.forEach(c => {
             // prevent out of borders movement
             let nextX = c.pos.x + c.speed().x 
@@ -291,6 +296,8 @@ class Game {
             ctx.fillStyle = c.skin;
             ctx.fill();
             ctx.closePath();
+
+            ctx.fillText(c.satiety.toFixed(1), c.pos.x - 15, c.pos.y + c.size.y + 10);
 
             // draw creature smelling area
             if (debug) {
