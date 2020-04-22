@@ -12,6 +12,7 @@ function rndStr() {
 }
 /** ---------------- */
 
+eventBus = document.createElement('i')
 
 class Vector2 
 {
@@ -109,7 +110,23 @@ class Level {
     constructor() {
         this.foods = []
         this.creatures = []
+
+        eventBus.addEventListener('creatureDeath', (e) => {
+            this.creatures.splice(this.creatures.findIndex(c => c.id === e.detail.creature.id), 1)
+            if (this.creatures.length === 1) {
+                eventBus.dispatchEvent(new CustomEvent('lastCreature', {detail: this.creatures[0]}))
+            }
+        })
     }
+}
+
+class Smell {
+    
+    constructor(intensity, color) {
+        this.intensity = intensity
+        this.color = color
+    }
+
 }
 
 class Food {
@@ -129,13 +146,13 @@ class Food {
 }
 
 class Creature {
+    
     constructor(npc) {
-        let maxSpeed = rnd(2, 6) / 2; 
         let rndBlue = () => `hsl(240, ${rnd(30, 80)}%, ${rnd(30, 80)}%)`;
 
         this.pos = new Vector2()
         this.weight = rnd(5, 20) 
-        this.maxSpeed = maxSpeed
+        this.maxSpeed = rnd(2, 6) / 2
         this.direction = new Vector2(rndFrom([-1, 1]) * Math.random(), rndFrom([-1, 1]) * Math.random())
         this.skin = !npc ? '#FF008F' : rndBlue()
         this.smellingR = rnd(50, 100),
@@ -176,16 +193,32 @@ class Creature {
     }
 
     moveTo(v) {
-        let direction = v.diff(this.pos).normalize()
-        this.pos.add(direction.multiply(this.maxSpeed))
-    }
-
-    feelHunger(hunger=0.3) {
-        this.satiety -= hunger
+        this.direction = v.diff(this.pos).normalize()
+        this.pos.add(this.speed())
     }
 
     search() {
         this.pos.add(this.speed())
+    }
+
+    feelHunger(hunger=0.3) {
+        this.satiety -= hunger
+        if (this.satiety < 0) {
+            this.decay()
+        }
+    }
+
+    decay() {
+        this.direction.set(0, 0)
+        this.weight -= 0.05
+
+        if (this.weight < 0) {
+           this.die()
+        }
+    }
+
+    die() {
+        eventBus.dispatchEvent(new CustomEvent('creatureDeath', {detail: {creature: this}}))
     }
 }
 
@@ -197,9 +230,12 @@ class Game {
         this.vars = vars
         this.cc = canvas.getContext("2d")
 
-        this.player = new Creature(false)
-
         this.levelsPassed = 0
+
+        eventBus.addEventListener('lastCreature', (e) => {
+            this.levelsPassed++
+            this.newLevel()
+        })
     }
 
     newLevel() {
@@ -212,11 +248,11 @@ class Game {
             lvl.foods.push(f)
         }
 
+        this.player = new Creature(false)
         this.player.pos.set(
             this.canvas.width / 2,
             this.canvas.height / 2
         )
-        this.player.satiety = 100
         lvl.creatures.push(this.player)
 
         // generate creatures
@@ -260,12 +296,7 @@ class Game {
 
         this.render()
 
-        if (this.lvl.foods.length === 0) {
-            this.levelsPassed++
-            this.newLevel()
-        } else {
-            requestAnimationFrame(this.tick.bind(this));
-        }
+        requestAnimationFrame(this.tick.bind(this));
     }
 
     render() {
@@ -297,7 +328,9 @@ class Game {
             ctx.fill();
             ctx.closePath();
 
-            ctx.fillText(c.satiety.toFixed(1), c.pos.x - 15, c.pos.y + c.size.y + 10);
+            if (c.satiety > 0) {
+                ctx.fillText(c.satiety.toFixed(1), c.pos.x - 15, c.pos.y + c.size.y + 10);
+            }
 
             // draw creature smelling area
             if (debug) {
