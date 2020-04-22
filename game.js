@@ -187,31 +187,34 @@ class Creature {
 
 class Game {
      
-    constructor(canvas) {
+    constructor(canvas, vars) {
         this.canvas = canvas
+        this.vars = vars
         this.cc = canvas.getContext("2d")
 
-        let player = new Creature(false)
-        player.pos.set(
-            this.canvas.width / 2,
-            this.canvas.height / 2
-        )
-        this.player = player
+        this.player = new Creature(false)
+
+        this.levelsPassed = 0
     }
 
-    start(vars) {
+    newLevel() {
         let lvl = new Level();
         
         // generate food
-        for (let i = 0; i < vars.foodAmount; i++) {
+        for (let i = 0; i < this.vars.foodAmount; i++) {
             let f = new Food();
             f.pos.set(rnd(0, this.canvas.width), rnd(0, this.canvas.height)) 
             lvl.foods.push(f)
         }
 
+        this.player.pos.set(
+            this.canvas.width / 2,
+            this.canvas.height / 2
+        )
         lvl.creatures.push(this.player)
+
         // generate creatures
-        for (let j = 0; j < vars.npcCreaturesAmount; j++) {
+        for (let j = 0; j < this.vars.npcCreaturesAmount; j++) {
             let c = new Creature(true)
             c.pos.set(
                 rnd(c.size.x, this.canvas.width - c.size.x),
@@ -253,7 +256,8 @@ class Game {
         this.render()
 
         if (this.lvl.foods.length === 0) {
-            location.reload();
+            this.levelsPassed++
+            this.newLevel()
         } else {
             requestAnimationFrame(this.tick.bind(this));
         }
