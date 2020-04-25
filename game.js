@@ -17,6 +17,7 @@ eventBus = document.createElement('i')
 class Level {
     /** Current state of game objects */
     constructor() {
+        this.id = rndStr()
         this.foods = []
         this.creatures = []
 
@@ -80,6 +81,12 @@ class Food {
         }
     }
 
+}
+
+class Player {
+    constructor() {
+        
+    }
 }
 
 class Creature {
@@ -164,12 +171,10 @@ class Game {
     constructor(canvas) {
         this.canvas = canvas
         this.level = null
+        this.player = new Player()
     }
 
     start(vars) {
-        let playerCreature = new Creature(false)
-        playerCreature.pos.set(this.canvas.width / 2, this.canvas.height / 2)
-
         let tick = () => {
             this.level.collideBorders(this.canvas)
             this.level.collideFoods(this.canvas)
@@ -181,11 +186,9 @@ class Game {
 
         eventBus.addEventListener('lastCreature', (e) => {
             this.level = this.createLevel(vars, this.canvas)
-            this.level.creatures.push(playerCreature)
         })
 
         this.level = this.createLevel(vars, this.canvas)
-        this.level.creatures.push(playerCreature)
 
         requestAnimationFrame(tick);
     }
@@ -210,6 +213,10 @@ class Game {
             lvl.creatures.push(c);
         }
 
+        let playerCreature = new Creature(false)
+        playerCreature.pos.set(this.canvas.width / 2, this.canvas.height / 2)
+        lvl.creatures.push(playerCreature)
+
         return lvl
     }
 
@@ -223,7 +230,7 @@ class Game {
             ctx.beginPath();
             ctx.rect(f.pos.x - f.size.x/2, f.pos.y - f.size.y/2, f.size.x, f.size.y);
             // ctx.fillStyle = coloredFood.includes(f.id) ? '#43DF39' : '#cceecc'; 
-            ctx.fillStyle = '#cceecc'; 
+            ctx.fillStyle = '#99ee99'; 
             ctx.fill();
             ctx.closePath();
         });
