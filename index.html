@@ -32,11 +32,11 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    let game = new Game(canvas, {
+    let game = new Game(canvas);
+    game.start({
         foodAmount: 100,
         npcCreaturesAmount: 10
     });
-    game.newLevel();
 </script>
 
 </body>

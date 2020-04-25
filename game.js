@@ -27,6 +27,34 @@ class Level {
             }
         })
     }
+
+    collideBorders(canvas) {
+        this.creatures.forEach(c => {
+            // prevent out of borders movement
+            let nextX = c.pos.x + c.speed().x 
+            if (nextX > canvas.width - c.size.x / 2 || nextX < c.size.x / 2) {
+                c.direction.multiply(new Vector2(-1, 1));
+            }
+            let nextY = c.pos.y + c.speed().y
+            if (nextY > canvas.height - c.size.y / 2 || nextY < c.size.y / 2) {
+                c.direction.multiply(new Vector2(1, -1));
+            }
+
+            c.act(this)
+        });
+    }
+
+    collideFoods() {
+        this.creatures.forEach(c => {
+            this.foods.forEach((f, i) => {
+                if (f.pos.distance(c.pos) <= Math.max(c.size.x, c.size.y)) {
+                    c.eat(f);
+                    this.foods.splice(i, 1);
+                }
+            })
+        })
+    }
+
 }
 
 class Smell {
@@ -131,90 +159,67 @@ class Creature {
     }
 }
 
-
 class Game {
      
-    constructor(canvas, vars) {
+    constructor(canvas) {
         this.canvas = canvas
-        this.vars = vars
-        this.cc = canvas.getContext("2d")
-
-        this.levelsPassed = 0
-
-        eventBus.addEventListener('lastCreature', (e) => {
-            this.levelsPassed++
-            this.newLevel()
-        })
+        this.level = null
     }
 
-    newLevel() {
+    start(vars) {
+        let playerCreature = new Creature(false)
+        playerCreature.pos.set(this.canvas.width / 2, this.canvas.height / 2)
+
+        let tick = () => {
+            this.level.collideBorders(this.canvas)
+            this.level.collideFoods(this.canvas)
+    
+            this.render(this.canvas, this.level)
+    
+            requestAnimationFrame(tick);
+        }
+
+        eventBus.addEventListener('lastCreature', (e) => {
+            this.level = this.createLevel(vars, this.canvas)
+            this.level.creatures.push(playerCreature)
+        })
+
+        this.level = this.createLevel(vars, this.canvas)
+        this.level.creatures.push(playerCreature)
+
+        requestAnimationFrame(tick);
+    }
+
+    createLevel(vars, canvas) {
         let lvl = new Level();
         
         // generate food
-        for (let i = 0; i < this.vars.foodAmount; i++) {
+        for (let i = 0; i < vars.foodAmount; i++) {
             let f = new Food();
-            f.pos.set(rnd(0, this.canvas.width), rnd(0, this.canvas.height)) 
+            f.pos.set(rnd(0, canvas.width), rnd(0, canvas.height)) 
             lvl.foods.push(f)
         }
 
-        this.player = new Creature(false)
-        this.player.pos.set(
-            this.canvas.width / 2,
-            this.canvas.height / 2
-        )
-        lvl.creatures.push(this.player)
-
-        // generate creatures
-        for (let j = 0; j < this.vars.npcCreaturesAmount; j++) {
+        // generate npc creatures
+        for (let j = 0; j < vars.npcCreaturesAmount; j++) {
             let c = new Creature(true)
             c.pos.set(
-                rnd(c.size.x, this.canvas.width - c.size.x),
-                rnd(c.size.y, this.canvas.height - c.size.y)
+                rnd(c.size.x, canvas.width - c.size.x),
+                rnd(c.size.y, canvas.height - c.size.y)
             )
             lvl.creatures.push(c);
         }
 
-        this.lvl = lvl;
-        this.tick()
+        return lvl
     }
 
-    tick() {
-        this.lvl.creatures.forEach(c => {
-            // prevent out of borders movement
-            let nextX = c.pos.x + c.speed().x 
-            if (nextX > this.canvas.width - c.size.x / 2 || nextX < c.size.x / 2) {
-                c.direction.multiply(new Vector2(-1, 1));
-            }
-            let nextY = c.pos.y + c.speed().y
-            if (nextY > this.canvas.height - c.size.y / 2 || nextY < c.size.y / 2) {
-                c.direction.multiply(new Vector2(1, -1));
-            }
-
-            c.act(this.lvl)
-        });
-
-        // collide foods
-        this.lvl.creatures.forEach(c => {
-            this.lvl.foods.forEach((f, i) => {
-                if (f.pos.distance(c.pos) <= Math.max(c.size.x, c.size.y)) {
-                    c.eat(f);
-                    this.lvl.foods.splice(i, 1);
-                }
-            })
-        })
-
-        this.render()
-
-        requestAnimationFrame(this.tick.bind(this));
-    }
-
-    render() {
-        let ctx = this.cc
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    render(canvas, level) {
+        let ctx = canvas.getContext("2d")
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // render food
         // let coloredFood = pCreature.smelledFood.map(f => f.id) 
-        this.lvl.foods.forEach(f => {
+        level.foods.forEach(f => {
             ctx.beginPath();
             ctx.rect(f.pos.x - f.size.x/2, f.pos.y - f.size.y/2, f.size.x, f.size.y);
             // ctx.fillStyle = coloredFood.includes(f.id) ? '#43DF39' : '#cceecc'; 
@@ -226,10 +231,10 @@ class Game {
 
         // draw remaining food counter
         ctx.font = "15px Arial";
-        ctx.fillText(this.lvl.foods.length, 10, 20);
+        ctx.fillText(level.foods.length, 10, 20);
 
         // draw creatures
-        this.lvl.creatures.forEach(c => {
+        level.creatures.forEach(c => {
             // draw creature area 
             ctx.beginPath();
             ctx.rect(c.pos.x - c.size.x/2, c.pos.y - c.size.y/2, c.size.x, c.size.y);
@@ -249,7 +254,7 @@ class Game {
                 ctx.strokeStyle = '#ddd';
                 ctx.stroke();
 
-                let target = c.sniff(this.lvl);
+                let target = c.sniff(level);
                 if (target) {
                     let sub = target.pos.distance(c.pos)
                     ctx.fillText(sub, c.pos.x + 10, c.pos.y);
