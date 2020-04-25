@@ -10,6 +10,14 @@ function rndFrom(l) {
 function rndStr() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
+
+function color(r, b, g) {
+    var o = Math.round, 
+        n = Math.random,
+        s = 160;
+    
+    return `rgba(${r || o(n()*s)}, ${b || o(n()*s)}, ${g || o(n()*s)}, 0.5)`;
+}
 /** ---------------- */
 
 eventBus = document.createElement('i')
@@ -56,6 +64,31 @@ class Level {
         })
     }
 
+    collideCreatures() {
+        this.creatures.forEach(c1 => {
+            this.creatures.forEach(c2 => {
+                if (c1.id === c2.id) {
+                    return
+                }
+                if (c1.pos.distance(c2.pos) <= Math.max(c1.size.x, c2.size.x)) {
+                    if (c1.weight < c2.weight) {
+                        c1.weight -= c2.power
+                    } else if (c1.weight > c2.weight) {
+                        c2.weight -= c1.power
+                    } else {
+                        c1.weight -= c2.power
+                    }
+                    if (c1.weight < 0) {
+                        c1.die()
+                    }
+                    if (c2.weight < 0) {
+                        c2.die()
+                    }
+                }
+            })
+        })
+    }
+
 }
 
 class Smell {
@@ -68,10 +101,12 @@ class Smell {
 }
 
 class Food {
+
     constructor() {
+        this.id = rndStr()
         this.pos = new Vector2()
         this.value = rnd(10,20)
-        this.id = rndStr()
+        this.smell = new Smell(rnd(50, 100), color())
     }
 
     get size() {
@@ -99,10 +134,10 @@ class Creature {
         this.maxSpeed = rnd(2, 6) / 2
         this.direction = new Vector2(rndFrom([-1, 1]) * Math.random(), rndFrom([-1, 1]) * Math.random())
         this.skin = !npc ? '#FF008F' : rndBlue()
-        this.smellingR = rnd(50, 100),
         this.satiety = 100
         this.npc = npc
         this.id = rndStr()
+        this.smell = new Smell(rnd(100, 150), color(200, 10, 0))
     }
 
     get size() {
@@ -117,13 +152,23 @@ class Creature {
         return this.direction.product(this.maxSpeed * a)
     }
 
+    get power() {
+        return this.weight / 100
+    }
+
     // calc near smelling food
     sniff(lvl) {
-        let smelledFood = lvl.foods.filter(f => this.smellingR > f.pos.distance(this.pos))
+        let smelledCreatures = lvl.creatures.filter(c => c.id !== this.id && c.smell.intensity > c.pos.distance(this.pos))
+        if (smelledCreatures.length > 0) {
+            return smelledCreatures.sort((c1, c2) => this.pos.distance(c1.pos) - this.pos.distance(c2.pos))[0]
+        }
 
-        return smelledFood 
-            ? smelledFood.sort((f1, f2) => this.pos.distance(f1.pos) - this.pos.distance(f2.pos))[0] 
-            : null
+        let smelledFood = lvl.foods.filter(f => f.smell.intensity > f.pos.distance(this.pos))
+        if (smelledFood.length > 0) {
+            return smelledFood.sort((f1, f2) => this.pos.distance(f1.pos) - this.pos.distance(f2.pos))[0]
+        }
+
+        return null
     }
 
     act(lvl) {
@@ -153,7 +198,7 @@ class Creature {
     }
 
     decay() {
-        this.direction.set(0, 0)
+        this.maxSpeed = 0
         this.weight -= 0.05
 
         if (this.weight < 0) {
@@ -178,6 +223,7 @@ class Game {
         let tick = () => {
             this.level.collideBorders(this.canvas)
             this.level.collideFoods(this.canvas)
+            this.level.collideCreatures()
     
             this.render(this.canvas, this.level)
     
@@ -233,6 +279,14 @@ class Game {
             ctx.fillStyle = '#99ee99'; 
             ctx.fill();
             ctx.closePath();
+
+            if (debug) {
+                ctx.beginPath();
+                ctx.arc(f.pos.x, f.pos.y, f.smell.intensity, 0, 2*Math.PI, false);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = f.smell.color;
+                ctx.stroke();
+            }
         });
 
 
@@ -249,28 +303,24 @@ class Game {
             ctx.fill();
             ctx.closePath();
 
-            if (c.satiety > 0) {
-                ctx.fillText(c.satiety.toFixed(1), c.pos.x - 15, c.pos.y + c.size.y + 10);
-            }
+            // if (c.satiety > 0) {
+            //     ctx.fillText(c.satiety.toFixed(1), c.pos.x - 15, c.pos.y + c.size.y + 10);
+            // }
 
             // draw creature smelling area
             if (debug) {
                 ctx.beginPath();
-                ctx.arc(c.pos.x, c.pos.y, c.smellingR, 0, 2*Math.PI, false);
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#ddd';
+                ctx.arc(c.pos.x, c.pos.y, c.smell.intensity, 0, 2*Math.PI, false);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = c.smell.color;
                 ctx.stroke();
 
+                // path to nearest food
                 let target = c.sniff(level);
                 if (target) {
-                    let sub = target.pos.distance(c.pos)
-                    ctx.fillText(sub, c.pos.x + 10, c.pos.y);
-                    ctx.fillText(target.size.x, c.pos.x + 10, c.pos.y + 15);
-
-                    // path to nearest food
                     ctx.beginPath();
-                    ctx.strokeStyle = '#aaa';
-                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = '#555';
+                    ctx.lineWidth = 2;
                     ctx.moveTo(c.pos.x, c.pos.y);
                     ctx.lineTo(target.pos.x, target.pos.y);
                     ctx.stroke()

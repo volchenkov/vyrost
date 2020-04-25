@@ -62,7 +62,7 @@ class Vector2
     normalize(scale=1) {
         let len = this.len;
 
-        return len > 0 ? this.multiply(scale / len) : this.Set(scale, y=0);
+        return Math.abs(len) < 1e-9 ? this.multiply(0) : this.multiply(scale / len);
     }
 
     diff(v) {
