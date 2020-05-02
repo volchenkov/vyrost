@@ -22,6 +22,10 @@ class Color {
     }
 
 }
+
+function collides(o1, o2) {
+    return o1.pos.distance(o2.pos) <= Math.max(o1.size.x, o2.size.x)
+}
 /** ---------------- */
 
 eventBus = document.createElement('i')
@@ -63,9 +67,9 @@ class Level {
 
     collidePlants() {
         this.creatures.forEach(c => {
-            this.plants.forEach((f, i) => {
-                if (f.pos.distance(c.pos) <= Math.max(c.size.x, c.size.y)) {
-                    c.eat(f);
+            this.plants.forEach((p, i) => {
+                if (collides(p, c)) {
+                    c.eat(p);
                     this.plants.splice(i, 1);
                 }
             })
@@ -78,7 +82,8 @@ class Level {
                 if (c1.id === c2.id) {
                     return
                 }
-                if (c1.pos.distance(c2.pos) <= Math.max(c1.size.x, c2.size.x)) {
+
+                if (collides(c1, c2)) {
                     if (c1.weight < c2.weight) {
                         c1.weight -= c2.power
                     } else if (c1.weight > c2.weight) {
@@ -332,8 +337,8 @@ class Game {
                 let target = c.getAim(level);
                 if (target) {
                     ctx.beginPath();
-                    ctx.strokeStyle = '#555';
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#bbb';
+                    ctx.lineWidth = 1;
                     ctx.moveTo(c.pos.x, c.pos.y);
                     ctx.lineTo(target.pos.x, target.pos.y);
                     ctx.stroke()
