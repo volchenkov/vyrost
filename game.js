@@ -53,10 +53,10 @@ class Level {
         this.creatures.forEach(c => {
             c.feelHunger()
             let aim = c.getAim(this) 
-            if (!aim) {
-                c.search()
+            if (aim) {
+                c.guideTo(aim.pos)
             } else {
-                c.moveTo(aim.pos)
+                c.search()
             }
     
             this.creatures.forEach(c2 => {
@@ -65,6 +65,9 @@ class Level {
                 }
 
                 if (collides(c, c2)) {
+                    c.direction.set(0, 0)
+                    c2.direction.set(0, 0)
+
                     c.hp -= c2.power
                     c2.hp -= c.power
 
@@ -93,6 +96,8 @@ class Level {
                     this.plants.splice(i, 1);
                 }
             })
+            
+            c.move()
         });
     }
 }
@@ -137,13 +142,21 @@ class Creature {
         this.pos = new Vector2()
         this.weight = rnd(5, 20) 
         this.maxSpeed = rnd(2, 6) / 2
-        this.direction = new Vector2(rndFrom([-1, 1]) * Math.random(), rndFrom([-1, 1]) * Math.random())
         this.skin = !npc ? '#FF008F' : rndBlue()
         this.npc = npc
         this.id = rndStr()
         this.smell = new Smell(rnd(100, 150))
         this.satiety = 100
         this.hp = this.weight
+        this.direction = new Vector2()
+
+        this.search()
+    }
+
+    search() {
+        if ((this.direction.x + this.direction.y) == 0) {
+            this.direction = new Vector2(rndFrom([-1, 1]) * Math.random(), rndFrom([-1, 1]) * Math.random())
+        }
     }
 
     get size() {
@@ -178,12 +191,15 @@ class Creature {
         return null
     }
 
-    moveTo(v) {
+    guideTo(v) {
         this.direction = v.diff(this.pos).normalize()
-        this.pos.add(this.speed())
     }
 
-    search() {
+    guideFrom(v) {
+        this.direction = v.diff(this.pos).normalize().multiply(-1)
+    }
+
+    move() {
         this.pos.add(this.speed())
     }
 
@@ -216,7 +232,7 @@ class Game {
         this.player = new Player()
 
         this.canvas.addEventListener('click', (e) => {
-            this.level.playerCreature.moveTo(new Vector2(e.clientX, e.clientY));
+            this.level.playerCreature.guideTo(new Vector2(e.clientX, e.clientY));
         })
     }
 
