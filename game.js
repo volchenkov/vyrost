@@ -30,7 +30,7 @@ class Level {
     /** Current state of game objects */
     constructor() {
         this.id = rndStr()
-        this.foods = []
+        this.plants = []
         this.creatures = []
 
         eventBus.addEventListener('creatureDeath', (e) => {
@@ -61,12 +61,12 @@ class Level {
         });
     }
 
-    collideFoods() {
+    collidePlants() {
         this.creatures.forEach(c => {
-            this.foods.forEach((f, i) => {
+            this.plants.forEach((f, i) => {
                 if (f.pos.distance(c.pos) <= Math.max(c.size.x, c.size.y)) {
                     c.eat(f);
-                    this.foods.splice(i, 1);
+                    this.plants.splice(i, 1);
                 }
             })
         })
@@ -107,7 +107,7 @@ class Smell {
 
 }
 
-class Food {
+class Plant {
 
     constructor() {
         this.id = rndStr()
@@ -170,9 +170,9 @@ class Creature {
             return smelledCreatures.sort((c1, c2) => this.pos.distance(c1.pos) - this.pos.distance(c2.pos))[0]
         }
 
-        let smelledFood = lvl.foods.filter(f => f.smell.intensity > f.pos.distance(this.pos))
-        if (smelledFood.length > 0) {
-            return smelledFood.sort((f1, f2) => this.pos.distance(f1.pos) - this.pos.distance(f2.pos))[0]
+        let smelledPlants = lvl.plants.filter(f => f.smell.intensity > f.pos.distance(this.pos))
+        if (smelledPlants.length > 0) {
+            return smelledPlants.sort((f1, f2) => this.pos.distance(f1.pos) - this.pos.distance(f2.pos))[0]
         }
 
         return null
@@ -233,7 +233,7 @@ class Game {
     start(vars) {
         let tick = () => {
             this.level.collideBorders(this.canvas)
-            this.level.collideFoods(this.canvas)
+            this.level.collidePlants(this.canvas)
             this.level.collideCreatures()
     
             this.render(this.canvas, this.level)
@@ -253,11 +253,11 @@ class Game {
     createLevel(vars, canvas) {
         let lvl = new Level();
         
-        // generate food
-        for (let i = 0; i < vars.foodAmount; i++) {
-            let f = new Food();
+        // generate plants
+        for (let i = 0; i < vars.plantsAmount; i++) {
+            let f = new Plant();
             f.pos.set(rnd(0, canvas.width), rnd(0, canvas.height)) 
-            lvl.foods.push(f)
+            lvl.plants.push(f)
         }
 
         // generate npc creatures
@@ -281,12 +281,10 @@ class Game {
         let ctx = canvas.getContext("2d")
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // render food
-        // let coloredFood = pCreature.smelledFood.map(f => f.id) 
-        level.foods.forEach(f => {
+        // render plants
+        level.plants.forEach(f => {
             ctx.beginPath();
             ctx.rect(f.pos.x - f.size.x/2, f.pos.y - f.size.y/2, f.size.x, f.size.y);
-            // ctx.fillStyle = coloredFood.includes(f.id) ? '#43DF39' : '#cceecc'; 
             ctx.fillStyle = '#99ee99'; 
             ctx.fill();
             ctx.closePath();
@@ -303,7 +301,7 @@ class Game {
 
         // draw remaining food counter
         ctx.font = "15px Arial";
-        ctx.fillText(level.foods.length, 10, 20);
+        ctx.fillText(level.plants.length, 10, 20);
 
         // draw creatures
         level.creatures.forEach(c => {
@@ -326,7 +324,6 @@ class Game {
                 ctx.strokeStyle = '#555';
                 ctx.stroke();
 
-                // path to nearest food
                 let target = c.sniff(level);
                 if (target) {
                     ctx.beginPath();
