@@ -165,27 +165,32 @@ class Creature {
 
     // calc near smelling food
     sniff(lvl) {
-        let smelledCreatures = lvl.creatures.filter(c => c.id !== this.id && c.smell.intensity > c.pos.distance(this.pos))
-        if (smelledCreatures.length > 0) {
-            return smelledCreatures.sort((c1, c2) => this.pos.distance(c1.pos) - this.pos.distance(c2.pos))[0]
-        }
+        return []
+            .concat(lvl.creatures, lvl.plants)
+            .filter(c => c.id !== this.id && c.smell.intensity > c.pos.distance(this.pos))
+    }
 
-        let smelledPlants = lvl.plants.filter(f => f.smell.intensity > f.pos.distance(this.pos))
-        if (smelledPlants.length > 0) {
-            return smelledPlants.sort((f1, f2) => this.pos.distance(f1.pos) - this.pos.distance(f2.pos))[0]
-        }
+    getAim(lvl) {
+        let smells = this.sniff(lvl)
+        if (smells.length > 0) {
+            return smells.sort((c1, c2) => this.pos.distance(c1.pos) - this.pos.distance(c2.pos))[0]
+        }  
 
         return null
     }
 
     act(lvl) {
         this.feelHunger()
-        let nearestFood = this.sniff(lvl)
-        if (nearestFood) {
-            this.moveTo(nearestFood.pos)
-        } else {
+
+        let aim = this.getAim(lvl) 
+
+        if (!aim) {
             this.search()
+            
+            return
         }
+
+        this.moveTo(aim.pos)
     }
 
     moveTo(v) {
@@ -321,10 +326,10 @@ class Game {
                 ctx.beginPath();
                 ctx.arc(c.pos.x, c.pos.y, c.smell.intensity, 0, 2*Math.PI, false);
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = '#555';
+                ctx.strokeStyle = '#aaa';
                 ctx.stroke();
 
-                let target = c.sniff(level);
+                let target = c.getAim(level);
                 if (target) {
                     ctx.beginPath();
                     ctx.strokeStyle = '#555';
