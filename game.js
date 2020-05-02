@@ -49,8 +49,38 @@ class Level {
         return this.creatures.filter(c => !c.npc)[0]
     }
 
-    collideBorders(canvas) {
+    tick(canvas) {
         this.creatures.forEach(c => {
+            c.feelHunger()
+            let aim = c.getAim(this) 
+            if (!aim) {
+                c.search()
+            } else {
+                c.moveTo(aim.pos)
+            }
+    
+            this.creatures.forEach(c2 => {
+                if (c.id === c2.id) {
+                    return
+                }
+
+                if (collides(c, c2)) {
+                    if (c.weight < c2.weight) {
+                        c.weight -= c2.power
+                    } else if (c.weight > c2.weight) {
+                        c2.weight -= c.power
+                    } else {
+                        c.weight -= c2.power
+                    }
+                    if (c.weight < 0) {
+                        c.die()
+                    }
+                    if (c2.weight < 0) {
+                        c2.die()
+                    }
+                }
+            })
+
             // prevent out of borders movement
             let nextX = c.pos.x + c.speed().x 
             if (nextX > canvas.width - c.size.x / 2 || nextX < c.size.x / 2) {
@@ -61,47 +91,14 @@ class Level {
                 c.direction.multiply(new Vector2(1, -1));
             }
 
-            c.act(this)
-        });
-    }
-
-    collidePlants() {
-        this.creatures.forEach(c => {
             this.plants.forEach((p, i) => {
                 if (collides(p, c)) {
                     c.eat(p);
                     this.plants.splice(i, 1);
                 }
             })
-        })
+        });
     }
-
-    collideCreatures() {
-        this.creatures.forEach(c1 => {
-            this.creatures.forEach(c2 => {
-                if (c1.id === c2.id) {
-                    return
-                }
-
-                if (collides(c1, c2)) {
-                    if (c1.weight < c2.weight) {
-                        c1.weight -= c2.power
-                    } else if (c1.weight > c2.weight) {
-                        c2.weight -= c1.power
-                    } else {
-                        c1.weight -= c2.power
-                    }
-                    if (c1.weight < 0) {
-                        c1.die()
-                    }
-                    if (c2.weight < 0) {
-                        c2.die()
-                    }
-                }
-            })
-        })
-    }
-
 }
 
 class Smell {
@@ -184,20 +181,6 @@ class Creature {
         return null
     }
 
-    act(lvl) {
-        this.feelHunger()
-
-        let aim = this.getAim(lvl) 
-
-        if (!aim) {
-            this.search()
-            
-            return
-        }
-
-        this.moveTo(aim.pos)
-    }
-
     moveTo(v) {
         this.direction = v.diff(this.pos).normalize()
         this.pos.add(this.speed())
@@ -242,9 +225,7 @@ class Game {
 
     start(vars) {
         let tick = () => {
-            this.level.collideBorders(this.canvas)
-            this.level.collidePlants(this.canvas)
-            this.level.collideCreatures()
+            this.level.tick(this.canvas)
     
             this.render(this.canvas, this.level)
     
