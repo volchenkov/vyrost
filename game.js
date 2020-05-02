@@ -65,17 +65,13 @@ class Level {
                 }
 
                 if (collides(c, c2)) {
-                    if (c.weight < c2.weight) {
-                        c.weight -= c2.power
-                    } else if (c.weight > c2.weight) {
-                        c2.weight -= c.power
-                    } else {
-                        c.weight -= c2.power
-                    }
-                    if (c.weight < 0) {
+                    c.hp -= c2.power
+                    c2.hp -= c.power
+
+                    if (c.hp < 0) {
                         c.die()
                     }
-                    if (c2.weight < 0) {
+                    if (c2.hp < 0) {
                         c2.die()
                     }
                 }
@@ -147,6 +143,7 @@ class Creature {
         this.id = rndStr()
         this.smell = new Smell(rnd(100, 150))
         this.satiety = 100
+        this.hp = this.weight
     }
 
     get size() {
@@ -302,6 +299,25 @@ class Game {
             ctx.fillStyle = c.skin;
             ctx.fill();
             ctx.closePath();
+
+            let drawHpBar = (v, m) => {
+                let barWidth = c.size.x,
+                    barHeight = 4;
+
+                let g = Math.floor((v / m) * 9),
+                    r = 10 - g
+
+                    
+                ctx.beginPath();
+                ctx.rect(c.pos.x - barWidth / 2, c.pos.y - c.size.y / 2 - 4, barWidth, barHeight);
+                ctx.fillStyle = `#${r}${g}0`;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            drawHpBar(c.hp, c.weight)
+
+
 
             // if (c.satiety > 0) {
             //     ctx.fillText(c.satiety.toFixed(1), c.pos.x - 15, c.pos.y + c.size.y + 10);
