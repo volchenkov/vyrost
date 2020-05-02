@@ -11,12 +11,16 @@ function rndStr() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
 
-function color(r, b, g) {
-    var o = Math.round, 
-        n = Math.random,
-        s = 160;
-    
-    return `rgba(${r || o(n()*s)}, ${b || o(n()*s)}, ${g || o(n()*s)}, 0.5)`;
+class Color {
+
+    constructor(r, g, b) {
+        let rnd = () => Math.round(Math.random() * 160);
+
+        this.r = r || rnd()
+        this.g = g || rnd()
+        this.b = b || rnd()
+    }
+
 }
 /** ---------------- */
 
@@ -35,6 +39,10 @@ class Level {
                 eventBus.dispatchEvent(new CustomEvent('lastCreature', {detail: this.creatures[0]}))
             }
         })
+    }
+
+    get playerCreature() {
+        return this.creatures.filter(c => !c.npc)[0]
     }
 
     collideBorders(canvas) {
@@ -93,9 +101,8 @@ class Level {
 
 class Smell {
     
-    constructor(intensity, color) {
+    constructor(intensity) {
         this.intensity = intensity
-        this.color = color
     }
 
 }
@@ -106,7 +113,7 @@ class Food {
         this.id = rndStr()
         this.pos = new Vector2()
         this.value = rnd(10,20)
-        this.smell = new Smell(rnd(50, 100), color())
+        this.smell = new Smell(rnd(50, 100))
     }
 
     get size() {
@@ -137,7 +144,7 @@ class Creature {
         this.satiety = 100
         this.npc = npc
         this.id = rndStr()
-        this.smell = new Smell(rnd(100, 150), color(200, 10, 0))
+        this.smell = new Smell(rnd(100, 150))
     }
 
     get size() {
@@ -190,7 +197,7 @@ class Creature {
         this.pos.add(this.speed())
     }
 
-    feelHunger(hunger=0.3) {
+    feelHunger(hunger=0.15) {
         this.satiety -= hunger
         if (this.satiety < 0) {
             this.decay()
@@ -217,6 +224,10 @@ class Game {
         this.canvas = canvas
         this.level = null
         this.player = new Player()
+
+        this.canvas.addEventListener('click', (e) => {
+            this.level.playerCreature.moveTo(new Vector2(e.clientX, e.clientY));
+        })
     }
 
     start(vars) {
@@ -284,7 +295,7 @@ class Game {
                 ctx.beginPath();
                 ctx.arc(f.pos.x, f.pos.y, f.smell.intensity, 0, 2*Math.PI, false);
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = f.smell.color;
+                ctx.strokeStyle = '#555';
                 ctx.stroke();
             }
         });
@@ -312,7 +323,7 @@ class Game {
                 ctx.beginPath();
                 ctx.arc(c.pos.x, c.pos.y, c.smell.intensity, 0, 2*Math.PI, false);
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = c.smell.color;
+                ctx.strokeStyle = '#555';
                 ctx.stroke();
 
                 // path to nearest food
