@@ -24,7 +24,7 @@ class Color {
 }
 
 function collides(o1, o2) {
-    return o1.pos.distance(o2.pos) <= Math.max(o1.size.x, o2.size.x)
+    return o1.pos.distance(o2.pos) <= (o1.size.x + o2.size.x)/2
 }
 /** ---------------- */
 
@@ -146,10 +146,10 @@ class Creature {
         this.maxSpeed = rnd(2, 6) / 2
         this.direction = new Vector2(rndFrom([-1, 1]) * Math.random(), rndFrom([-1, 1]) * Math.random())
         this.skin = !npc ? '#FF008F' : rndBlue()
-        this.satiety = 100
         this.npc = npc
         this.id = rndStr()
         this.smell = new Smell(rnd(100, 150))
+        this.satiety = 100
     }
 
     get size() {
