@@ -71,10 +71,10 @@ class Level {
                     c.hp -= c2.power
                     c2.hp -= c.power
 
-                    if (c.hp < 0) {
+                    if (c.hp <= 0) {
                         c.die()
                     }
-                    if (c2.hp < 0) {
+                    if (c2.hp <= 0) {
                         c2.die()
                     }
                 }
@@ -331,7 +331,9 @@ class Game {
                 ctx.closePath();
             }
 
-            drawHpBar(c.hp, c.weight)
+            if (c.hp > 0) {
+                drawHpBar(c.hp, c.weight)
+            }
 
 
 
